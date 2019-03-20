@@ -88,7 +88,7 @@ class LipsiSim(asm: String) {
             delayOne = true
           }
           case 0x6 =>
-          case 0x7 =>
+          case 0x7 => if (instr != 0xff) accu = (instr & 0x0f)
         }
       }
 
