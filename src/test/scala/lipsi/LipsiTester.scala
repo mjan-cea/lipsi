@@ -33,7 +33,7 @@ class LipsiTester(dut: Lipsi) extends PeekPokeTester(dut) {
 object LipsiTester {
   def main(args: Array[String]): Unit = {
     println("Testing Lipsi")
-    iotesters.Driver.execute(Array[String](), () => new Lipsi(args(0))) {
+    iotesters.Driver.execute(Array[String]("--fint-write-vcd"/*"--backend-name", "verilator"*/), () => new Lipsi(args(0))) {
       c => new LipsiTester(c)
     }
       /* Chisel 2

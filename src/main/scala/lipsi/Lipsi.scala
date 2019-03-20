@@ -161,9 +161,10 @@ class Lipsi(prog: String) extends Module {
         }
       }
       // IO
-      when(rdData === 0xf0.U) {
+      when(rdData(7, 4) === 0xf.U && rdData(3,0) =/= 0xf.U) {
         outReg := accuReg
         enaIoReg := true.B
+        accuReg := rdData(3,0);
         stateReg := fetch
       }
       // exit (for the tester)
@@ -211,10 +212,10 @@ class Lipsi(prog: String) extends Module {
   when(enaAccuReg) {
     accuReg := res
   }
-  when(enaIoReg) {
+/*  when(enaIoReg) {
     accuReg := io.din
   }
-
+ */
   io.dout := outReg
   io.dbg.accu := accuReg
   io.dbg.pc := pcReg

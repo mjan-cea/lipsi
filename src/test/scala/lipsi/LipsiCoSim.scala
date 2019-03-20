@@ -20,9 +20,12 @@ class LipsiCoSim(dut: Lipsi, arg0: String) extends PeekPokeTester(dut) {
   var maxInstructions = 30
   while(run) {
 
+    println(s"PC Hard=${peek(dut.io.dbg.pc)}, PC soft=${lsim.pc}");
+    println(s"Accu Hard=${peek(dut.io.dbg.accu)}, Accu soft=${lsim.accu}");
+    println(s"Exit Hard=${peek(dut.io.dbg.exit)}");
     expect(dut.io.dbg.pc, lsim.pc, "PC shall be equal.\n")
     expect(dut.io.dbg.accu, lsim.accu, "Accu shall be equal.\n")
-    
+
     step(1)
     lsim.step()
     maxInstructions -= 1
@@ -34,7 +37,7 @@ class LipsiCoSim(dut: Lipsi, arg0: String) extends PeekPokeTester(dut) {
 object LipsiCoSim {
   def main(args: Array[String]): Unit = {
     println("Co-simulation of Lipsi")
-    iotesters.Driver.execute(Array[String](), () => new Lipsi(args(0))) {
+    iotesters.Driver.execute(Array[String]("fint-vcd-show-underscored-vars", "--fint-write-vcd"), () => new Lipsi(args(0))) {
       c => new LipsiCoSim(c, args(0))
     }
 
