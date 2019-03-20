@@ -4,6 +4,6 @@
 #
 
 loop:
-io 0x1
+io 0x0
 addi 0x01
 br loop
