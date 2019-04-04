@@ -19,6 +19,7 @@ class LipsiTester(dut: Lipsi) extends PeekPokeTester(dut) {
   while(run) {
     peek(dut.io.dbg.pc)
     peek(dut.io.dbg.accu)
+    peek(dut.io.dbg.exit)    
     // peek(dut.mem.io.rdAddr)
     // peek(dut.stateReg) possible in Chisel 2
     step(1)

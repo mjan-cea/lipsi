@@ -38,6 +38,25 @@ class DebugData extends Bundle {
   val pc = UInt(8.W)
   val accu = UInt(8.W)
   val exit = Bool()
+
+  val accuReg = UInt(8.W)
+  val accuZero = UInt(8.W)
+  val enaAccuReg = Bool()
+  val enaIoReg = Bool()
+  val enaPcReg = Bool()
+  val exitReg = UInt(8.W)
+  val funcReg = UInt(8.W)
+  val nextPC = UInt(8.W)
+  val op = UInt(8.W)
+  val outReg = UInt(8.W)
+  val pcReg = UInt(8.W)
+  val rdAddr = UInt(9.W)
+  val rdData = UInt(8.W)
+  val res = UInt(8.W)
+  val stateReg = UInt(8.W)
+  val updPC = UInt(8.W)
+  val wrAddr = UInt(9.W)
+  
 }
 
 class Lipsi(prog: String) extends Module {
@@ -221,6 +240,24 @@ class Lipsi(prog: String) extends Module {
   io.dbg.accu := accuReg
   io.dbg.pc := pcReg
   io.dbg.exit := exitReg
+
+  io.dbg.accuReg := accuReg
+  io.dbg.accuZero := accuZero
+  io.dbg.enaAccuReg := enaAccuReg
+  io.dbg.enaIoReg := enaIoReg
+  io.dbg.enaPcReg := enaPcReg
+  io.dbg.exitReg := exitReg
+  io.dbg.funcReg := funcReg
+  io.dbg.nextPC := nextPC
+  io.dbg.op := op
+  io.dbg.outReg := outReg
+  io.dbg.pcReg := pcReg
+  io.dbg.rdAddr := rdAddr
+  io.dbg.rdData := rdData
+  io.dbg.res := res
+  io.dbg.stateReg := stateReg
+  io.dbg.updPC := updPC
+  io.dbg.wrAddr := wrAddr  
 }
 
 class LipsiTop(prog: String) extends Module {

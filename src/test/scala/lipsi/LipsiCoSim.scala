@@ -23,6 +23,32 @@ class LipsiCoSim(dut: Lipsi, arg0: String) extends PeekPokeTester(dut) {
     println(s"PC Hard=${peek(dut.io.dbg.pc)}, PC soft=${lsim.pc}");
     println(s"Accu Hard=${peek(dut.io.dbg.accu)}, Accu soft=${lsim.accu}");
     println(s"Exit Hard=${peek(dut.io.dbg.exit)}");
+
+    println(s"---------------------------------");
+    println(s"");
+    println(s"  accuReg=${peek(dut.io.dbg.accuReg)}");
+    if (peek(dut.io.dbg.accuZero) == 0)
+       println(s"  accuZero=FALSE"); else println(s"  accuZero=TRUE");
+    println(s"  enaAccuReg=${peek(dut.io.dbg.enaAccuReg)}");
+    if (peek(dut.io.dbg.enaIoReg) == 0)
+       println(s"  enaIoReg=FALSE"); else println(s"  enaIoReg=TRUE");
+    if (peek(dut.io.dbg.enaPcReg) == 0)
+       println(s"  enaPcReg=FALSE"); else println(s"  enaPcReg=TRUE");
+    println(s"  exitReg=${peek(dut.io.dbg.exitReg)}");
+    println(s"  funcReg=${peek(dut.io.dbg.funcReg)}");
+    println(s"  nextPC=${peek(dut.io.dbg.nextPC)}");
+    println(s"  op=${peek(dut.io.dbg.op)}");
+    println(s"  outReg=${peek(dut.io.dbg.outReg)}");
+    println(s"  pcReg=${peek(dut.io.dbg.pcReg)}");
+    println(f"  rdAddr=${peek(dut.io.dbg.rdAddr)}%x");
+    println(s"  rdData=${peek(dut.io.dbg.rdData)}");
+    println(s"  res=${peek(dut.io.dbg.res)}");
+    println(s"  stateReg=${peek(dut.io.dbg.stateReg)}");
+    println(s"  updPC=${peek(dut.io.dbg.updPC)}");
+    println(s"  wrAddr=${peek(dut.io.dbg.wrAddr)}");
+    println(s"");
+    println(s"---------------------------------");
+
     expect(dut.io.dbg.pc, lsim.pc, "PC shall be equal.\n")
     expect(dut.io.dbg.accu, lsim.accu, "Accu shall be equal.\n")
 
