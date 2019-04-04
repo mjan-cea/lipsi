@@ -47,7 +47,7 @@ class DebugData extends Bundle {
   val exitReg = UInt(8.W)
   val funcReg = UInt(8.W)
   val nextPC = UInt(8.W)
-  val op = UInt(9.W)
+  val op = UInt(8.W)
   val outReg = UInt(8.W)
   val pcReg = UInt(8.W)
   val rdAddr = UInt(9.W)
