@@ -37,7 +37,7 @@ class LipsiCoSim(dut: Lipsi, arg0: String) extends PeekPokeTester(dut) {
     println(s"  exitReg=${peek(dut.io.dbg.exitReg)}");
     println(s"  funcReg=${peek(dut.io.dbg.funcReg)}");
     println(s"  nextPC=${peek(dut.io.dbg.nextPC)}");
-    println(s"  op=${peek(dut.io.dbg.op)}");
+    println(f"  op=${peek(dut.io.dbg.op)}%x");
     println(s"  outReg=${peek(dut.io.dbg.outReg)}");
     println(s"  pcReg=${peek(dut.io.dbg.pcReg)}");
     println(f"  rdAddr=${peek(dut.io.dbg.rdAddr)}%x");
