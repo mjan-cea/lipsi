@@ -34,10 +34,36 @@ add, sub, adc, sbb, and, or, xor, ld
 
 */
 
+class DebugData extends Bundle {
+  val pc = UInt(8.W)
+  val accu = UInt(8.W)
+  val exit = Bool()
+
+  val accuReg = UInt(8.W)
+  val accuZero = UInt(8.W)
+  val enaAccuReg = Bool()
+  val enaIoReg = Bool()
+  val enaPcReg = Bool()
+  val exitReg = UInt(8.W)
+  val funcReg = UInt(8.W)
+  val nextPC = UInt(8.W)
+  val op = UInt(8.W)
+  val outReg = UInt(8.W)
+  val pcReg = UInt(8.W)
+  val rdAddr = UInt(9.W)
+  val rdData = UInt(8.W)
+  val res = UInt(8.W)
+  val stateReg = UInt(8.W)
+  val updPC = UInt(8.W)
+  val wrAddr = UInt(9.W)
+  
+}
+
 class Lipsi(prog: String) extends Module {
   val io = IO(new Bundle {
     val dout = Output(UInt(8.W))
     val din = Input(UInt(8.W))
+    val dbg = Output(new DebugData)
   })
   // val fetch :: execute :: stind :: ldind1 :: ldind2 :: exit :: Nil = Enum(6)
   val fetch = 0.U
@@ -47,20 +73,19 @@ class Lipsi(prog: String) extends Module {
   val ldind2 = 4.U
   val exit = 5.U
 
-  val stateReg = RegInit(fetch)
-  // debug(stateReg)
-  val pcReg = RegInit(UInt(0, 8))
-  val accuReg = RegInit(UInt(0, 8))
-  val enaAccuReg = RegInit(Bool(false))
 
-  val enaPcReg = RegInit(Bool(false))
+  val pcReg = RegInit(0.U(8.W))
+  val accuReg = RegInit(0.U(8.W))
+  val enaAccuReg = RegInit(false.B)
 
-  val funcReg = RegInit(UInt(0, 3))
+  val enaPcReg = RegInit(false.B)
+
+  val funcReg = RegInit(0.U(3.W))
   // debug(funcReg) Chisel 2
 
   // IO register
-  val outReg = RegInit(UInt(0, 8))
-  val enaIoReg = RegInit(Bool(false))
+  val outReg = RegInit(0.U(8.W))
+  val enaIoReg = RegInit(false.B)
 
   val mem = Module(new Memory(prog))
 
@@ -70,14 +95,14 @@ class Lipsi(prog: String) extends Module {
   val rdData = mem.io.rdData
 
   // the following is used?
-  val regInstr = Reg(next = rdData)
+  val regInstr = RegNext(rdData)
 
   //  val rdAddr = Mux(selPC, Cat(UInt(0, 1), regPC + UInt(1)),
   //    Cat(UInt(1, 1), Mux(selData, rdData, regA)))
 
   // Do we need a support of storing the PC?
   // Probably, but it should be simple into a fixed register (15))
-  val isCall = Bool(false)
+  val isCall = false.B
 
   val wrEna = Wire(Bool())
   val wrAddr = Wire(UInt())
@@ -85,17 +110,17 @@ class Lipsi(prog: String) extends Module {
   val updPC = Wire(Bool())
 
   mem.io.rdAddr := rdAddr
-  mem.io.wrAddr := Cat(UInt(1, 1), wrAddr(7, 0))
+  mem.io.wrAddr := Cat(1.U(1.W), wrAddr(7, 0))
   mem.io.wrData := Mux(isCall, pcReg, accuReg)
   mem.io.wrEna := wrEna
 
   val nextPC = Wire(UInt())
   // defaults
-  wrEna := Bool(false)
+  wrEna := false.B
   wrAddr := rdData
-  rdAddr := Cat(UInt(0, 1), nextPC)
-  updPC := Bool(true)
-  nextPC := pcReg + UInt(1)
+  rdAddr := Cat(0.U(1.W), nextPC)
+  updPC := true.B
+  nextPC := pcReg + 1.U
 
   when(enaPcReg) {
     nextPC := rdData
@@ -105,22 +130,23 @@ class Lipsi(prog: String) extends Module {
   }
 
 
-  val exitReg = RegInit(Bool(false))
+  val fetch :: execute :: stind :: ldind1 :: ldind2 :: exit :: Nil = Enum(6)
+  val stateReg = RegInit(fetch)
+  // debug(stateReg)
+
+  val exitReg = RegInit(false.B)
+
   // debug(exitReg) Chisel 2
 
-  val accuZero = Wire(Bool())
-  accuZero := Bool(false)
-  when(accuReg === Bits(0)) {
-    accuZero := Bool(true)
-  }
+  val accuZero = accuReg === 0.U
 
-  val doBranch = (rdData(1, 0) === Bits(0)) ||
-    ((rdData(1, 0) === Bits(2)) && accuZero) ||
-    ((rdData(1, 0) === Bits(3)) && !accuZero)
+  val doBranch = (rdData(1, 0) === 0.U) ||
+    ((rdData(1, 0) === 2.U) && accuZero) ||
+    ((rdData(1, 0) === 3.U) && !accuZero)
 
-  enaAccuReg := Bool(false)
-  enaPcReg := Bool(false)
-  enaIoReg := Bool(false)
+  enaAccuReg := false.B
+  enaPcReg := false.B
+  enaIoReg := false.B
 
   // debug(enaAccuReg) Chisel 2
   switch(stateReg) {
@@ -128,79 +154,81 @@ class Lipsi(prog: String) extends Module {
       stateReg := execute
       funcReg := rdData(6, 4)
       // ALU register
-      when(rdData(7) === Bits(0)) {
-        updPC := Bool(false)
+      when(rdData(7) === 0.U) {
+        updPC := false.B
         funcReg := rdData(6, 4)
-        enaAccuReg := Bool(true)
-        rdAddr := Cat(UInt(0x10), rdData(3, 0))
+        enaAccuReg := true.B
+        rdAddr := Cat(0x10.U, rdData(3, 0))
       }
 
       // st rx, is just a single cycle
-      when(rdData(7, 4) === Bits(0x8)) {
-        wrAddr := Cat(UInt(0), rdData(3, 0))
-        wrEna := Bool(true)
+      when(rdData(7, 4) === 0x8.U) {
+        wrAddr := Cat(0.U, rdData(3, 0))
+        wrEna := true.B
         stateReg := fetch
       }
       // ldind
-      when(rdData(7, 4) === Bits(0xa)) {
-        updPC := Bool(false)
-        rdAddr := Cat(UInt(0x10), rdData(3, 0))
+      when(rdData(7, 4) === 0xa.U) {
+        updPC := false.B
+        rdAddr := Cat(0x10.U, rdData(3, 0))
         stateReg := ldind1
       }
       // stind
-      when(rdData(7, 4) === Bits(0xb)) {
-        updPC := Bool(false)
-        rdAddr := Cat(UInt(0x10), rdData(3, 0))
+      when(rdData(7, 4) === 0xb.U) {
+        updPC := false.B
+        rdAddr := Cat(0x10.U, rdData(3, 0))
         stateReg := stind
       }
       // ALU imm
-      when(rdData(7, 4) === Bits(0xc)) {
+      when(rdData(7, 4) === 0xc.U) {
         funcReg := rdData(2, 0)
-        enaAccuReg := Bool(true)
+        enaAccuReg := true.B
       }
       // Branch
-      when(rdData(7, 4) === Bits(0xd)) {
+      when(rdData(7, 4) === 0xd.U) {
         when(doBranch) {
-          enaPcReg := Bool(true)
+          enaPcReg := true.B
         }
       }
       // IO
-      when(rdData === Bits(0xf0)) {
+      when(rdData(7, 4) === 0xf.U && rdData(3,0) =/= 0xf.U) {
         outReg := accuReg
-        enaIoReg := Bool(true)
+        enaIoReg := true.B
+        // TODO: we should put a signal to say when din is valid
+        accuReg := rdData(3,0)
         stateReg := fetch
       }
       // exit (for the tester)
-      when(rdData === Bits(0xff)) {
+      when(rdData === 0xff.U) {
         stateReg := exit
       }
     }
     is(stind) {
-      wrEna := Bool(true)
+      wrEna := true.B
       stateReg := fetch
     }
     is(execute) {
       stateReg := fetch
     }
     is(ldind1) {
-      updPC := Bool(false)
-      funcReg := Bits(7)
-      enaAccuReg := Bool(true)
-      rdAddr := Cat(UInt(0x1), rdData)
+      updPC := false.B
+      funcReg := 7.U
+      enaAccuReg := true.B
+      rdAddr := Cat(0x1.U, rdData)
       stateReg := ldind2
     }
     is(ldind2) {
       stateReg := fetch
     }
     is(exit) {
-      exitReg := Bool(true)
+      exitReg := true.B
     }
   }
 
 
   val op = rdData
   val res = Wire(UInt())
-  res := UInt(0, 8)
+  res := 0.U(8.W)
 
   val add :: sub :: adc :: sbb :: and :: or :: xor :: ld :: Nil = Enum(8)
   switch(funcReg) {
@@ -216,17 +244,39 @@ class Lipsi(prog: String) extends Module {
   when(enaAccuReg) {
     accuReg := res
   }
-  when(enaIoReg) {
+/*  when(enaIoReg) {
     accuReg := io.din
   }
-
+ */
   io.dout := outReg
+  io.dbg.accu := accuReg
+  io.dbg.pc := pcReg
+  io.dbg.exit := exitReg
+
+  io.dbg.accuReg := accuReg
+  io.dbg.accuZero := accuZero
+  io.dbg.enaAccuReg := enaAccuReg
+  io.dbg.enaIoReg := enaIoReg
+  io.dbg.enaPcReg := enaPcReg
+  io.dbg.exitReg := exitReg
+  io.dbg.funcReg := funcReg
+  io.dbg.nextPC := nextPC
+  io.dbg.op := op
+  io.dbg.outReg := outReg
+  io.dbg.pcReg := pcReg
+  io.dbg.rdAddr := rdAddr
+  io.dbg.rdData := rdData
+  io.dbg.res := res
+  io.dbg.stateReg := stateReg
+  io.dbg.updPC := updPC
+  io.dbg.wrAddr := wrAddr  
 }
 
 class LipsiTop(prog: String) extends Module {
   val io = IO(new Bundle {
     val dout = Output(UInt(8.W))
     val din = Input(UInt(8.W))
+    val dbg = Output(new DebugData)
   })
 
   val x = Wire(Bool())
