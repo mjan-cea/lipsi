@@ -65,6 +65,14 @@ class Lipsi(prog: String) extends Module {
     val din = Input(UInt(8.W))
     val dbg = Output(new DebugData)
   })
+  // val fetch :: execute :: stind :: ldind1 :: ldind2 :: exit :: Nil = Enum(6)
+  val fetch = 0.U
+  val execute = 1.U
+  val stind = 2.U
+  val ldind1 = 3.U
+  val ldind2 = 4.U
+  val exit = 5.U
+
 
   val pcReg = RegInit(0.U(8.W))
   val accuReg = RegInit(0.U(8.W))
@@ -121,11 +129,13 @@ class Lipsi(prog: String) extends Module {
     pcReg := nextPC
   }
 
+
   val fetch :: execute :: stind :: ldind1 :: ldind2 :: exit :: Nil = Enum(6)
   val stateReg = RegInit(fetch)
   // debug(stateReg)
 
   val exitReg = RegInit(false.B)
+
   // debug(exitReg) Chisel 2
 
   val accuZero = accuReg === 0.U
@@ -150,6 +160,7 @@ class Lipsi(prog: String) extends Module {
         enaAccuReg := true.B
         rdAddr := Cat(0x10.U, rdData(3, 0))
       }
+
       // st rx, is just a single cycle
       when(rdData(7, 4) === 0x8.U) {
         wrAddr := Cat(0.U, rdData(3, 0))
@@ -213,6 +224,7 @@ class Lipsi(prog: String) extends Module {
       exitReg := true.B
     }
   }
+
 
   val op = rdData
   val res = Wire(UInt())
